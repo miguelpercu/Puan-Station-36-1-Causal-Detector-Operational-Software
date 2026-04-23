@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Puan Station 36+1 Detector – Real‑time RMS Monitor
+================================================================
+Author: Miguel Ángel Percudani
+ORCID: 0009-0007-1748-3212
+Description:
+    Captures the signal from the central (observer) coil and displays
+    the running RMS value. With correct hardware calibration (INA128
+    gain = 1.9694), the RMS should stabilize near 0.7050 V (normalized).
+
+Requirements:
+    - Python 3.7+
+    - numpy
+    - sounddevice
+"""
+
+import numpy as np
+import sounddevice as sd
+import time
+
+# ---------------------------------------------------------------------
+# CONFIGURATION
+# ---------------------------------------------------------------------
+FS = 192000                # Sampling rate (Hz) – must match the generator
+CHUNK = 4096               # Samples per block (lower = more responsive)
+GAIN = 1.9694              # INA128 hardware gain (for display only)
+
+# ---------------------------------------------------------------------
+# RMS CALLBACK
+# ---------------------------------------------------------------------
+def rms_callback(indata, frames, time_info, status):
+    """
+    Called for each audio block. Computes and prints the RMS value.
+    """
+    if status:
+        print(f"Status: {status}")
+    # indata is a 2D array (frames x channels). We only use channel 0.
+    rms = np.sqrt(np.mean(indata[:, 0] ** 2))
+    # The hardware already applies GAIN. Here we simply display the value.
+    print(f"RMS = {rms:.6f} (target: ~0.7050)")
+
+# ---------------------------------------------------------------------
+# MAIN STREAM
+# ---------------------------------------------------------------------
+print("Puan Station RMS Monitor")
+print(f"Sampling rate: {FS} Hz | Block size: {CHUNK}")
+print("Press Ctrl+C to stop.\n")
+
+stream = sd.InputStream(
+    channels=1,
+    samplerate=FS,
+    blocksize=CHUNK,
+    callback=rms_callback
+)
+
+with stream:
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("\nMonitoring stopped by user.")

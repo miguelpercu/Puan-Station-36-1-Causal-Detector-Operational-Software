@@ -1,0 +1,148 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows.meta, positioning}
+
+\title{\textbf{Technical Note: Precision Grounding, Shielding, and INA128 Implementation for the 36+1 Causal Detector}}
+\author{Miguel Ángel Percudani\\
+\texttt{ORCID: 0009-0007-1748-3212}\\
+\small \textit{Independent Researcher, Buenos Aires, Argentina}}
+\date{Version 1.0 -- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This technical note provides the critical wiring and grounding instructions necessary to achieve a noise floor compatible with the UAT/UPC scalar torsion detection. It details the star grounding topology, galvanic isolation, shielding practices, and the precise soldering of the INA128 instrumentation amplifier gain resistor. Adherence to these protocols ensures that the 7\% asymmetry and the fixed gain of 1.9694 produce a stable RMS saturation of 0.7050 (theoretical limit $0.7071$), preventing electromagnetic interference from corrupting the causal buffer.
+\end{abstract}
+
+\section{System Grounding and Isolation Topology}
+The electrical reference point (``Bit 0'' of the circuit) is a single, heavy copper busbar. All returns must converge independently to prevent voltage differentials.
+
+\begin{figure}[H]
+\centering
+\begin{verbatim}
+[ BATTERY BANK ]          [ COMPUTER / PC ]
+   (Isolated/Floating)            |
+         |                 [ USB ISOLATOR ]
+         v                        |
++-----------------------+         |
+|    POWER RAILS        |         |
+| (+12V, -12V, +5V, -5V)|         |
++----------+------------+         |
+           |                      |
+           | (Power Return)       |
+           |                      |
+           v                      v
+=======================================================
+||            CENTRAL COPPER BUSBAR                 ||
+||           (SINGLE-POINT STAR GROUND)             ||  <-- ELECTRICAL "BIT 0"
+=======================================================
+    ^         ^         ^                   ^
+    |         |         |                   |
++---+---+ +---+---+ +---+---+         +-----+-----+
+| SHIELD| |  GND  | |  GND  |         |  CENTRAL  |
+| (COAX)| |  AMP  | | AUDIO  |         |   COIL    |
+| CABLES| |(INA128)| | INTERF.|         |  RETURN   |
++-------+ +-------+ +-------+         +-----------+
+    |         |         |                   |
+(36 CHANNELS)(INA128) (5x UMC1820)    (CLEAN RETURN)
+\end{verbatim}
+\caption{Star grounding and isolation architecture.}
+\end{figure}
+
+\subsection{Critical Configuration Points}
+\begin{itemize}[noitemsep]
+    \item \textbf{Electrical Authority Node:} The copper busbar defines absolute zero potential. All current returns must converge independently to eliminate voltage drops between devices.
+    \item \textbf{Galvanic Isolation:} The ADuM3160 USB isolator is \textbf{mandatory}. It physically disconnects the PC's noisy power supply ground from the experiment's clean ground. Without it, high-frequency processor noise will inject into the INA128.
+    \item \textbf{Floating Shield:} The shields of the 100 meters of twisted-pair cable connecting the 36 peripheral coils must be joined to the star point at \textbf{one end only} (preferably at the copper busbar). This forms a Faraday cage that carries no return current.
+\end{itemize}
+
+This topology guarantees that the \textit{Sobre Fuerza} (3.697) manifests on a pure signal, allowing the fixed gain of 1.9694 to operate exactly at the threshold of the Fifth Law.
+
+\section{INA128 Instrumentation Amplifier: Precision Assembly}
+The INA128 is an ultra-high-precision instrumentation amplifier, making it extremely sensitive. If the 51 k$\Omega$ gain resistor acts as an antenna, it will capture environmental EMI and corrupt the Bit 0 metric.
+
+\subsection{Critical Connection Schematic (Central Node Shielding)}
+To maintain the 3.697 torsion without distortion, follow this physical connection order:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Absolute Proximity:} The 51 k$\Omega$ resistor must be soldered as close as physically possible to pins 1 and 8 of the INA128. Every millimeter of excess wire is an antenna for ambient noise.
+    \item \textbf{Reference Ground (Pin 5 -- REF):} The INA128 reference pin must run directly to the Copper Busbar via a dedicated wire. Do not share this return path with any other component. This is the ``anchor point'' of your signal.
+    \item \textbf{Central Coil Shielding:}
+    \begin{enumerate}
+        \item Use shielded twisted-pair cable to bring the central coil signal to the amplifier.
+        \item \textbf{Golden Rule:} Connect the cable shield \textbf{only} at the copper busbar end. Leave the coil end of the shield floating (unconnected). This prevents the shield from carrying return current and becoming a noise source.
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Clean Signal Flow Visualization}
+\begin{verbatim}
+ CENTRAL COIL (Puan)          AMPLIFIER BLOCK (INA128)          STAR GROUND
+      [ O ] ---------------------> [ Vin+ ] (Pin 3)              (Copper)
+      [ O ] ---------------------> [ Vin- ] (Pin 2)                 |
+                                       |                            |
+      (Cable Shield)                   |                            |
+      X <--- (Do not connect here)     +----------------------------+
+                                       |
+      [ 51k Resistor ]                 |
+      (Pins 1 & 8) <-------------------+ [ REF ] (Pin 5) <----------+
+                                       |
+                                       +-> [ Vout ] (Pin 6) ---> To Audio Interface
+\end{verbatim}
+
+\subsection{Step-by-Step INA128 Assembly Protocol}
+\subsubsection{1. Chip Preparation}
+\begin{itemize}[noitemsep]
+    \item \textbf{Gain Resistor ($R_G$):} Solder the 51 k$\Omega$ (0.1\%) resistor directly across pins 1 and 8. Trim the excess leads flush with the solder joint. Do not use extension wires; the resistor must be ``mated'' to the chip body.
+    \item \textbf{Decoupling Capacitors:} Place a 0.1 \textmu F ceramic capacitor between pin 7 (+V) and ground, and another between pin 4 (-V) and ground. This ensures the battery supply remains pure.
+\end{itemize}
+
+\subsubsection{2. Central Coil Connection (Signal Input)}
+\begin{itemize}[noitemsep]
+    \item \textbf{Input Pins:} Connect the two inner conductors of the shielded twisted-pair to pins 2 (In-) and 3 (In+).
+    \item \textbf{Shield Management:}
+    \begin{itemize}
+        \item \textit{At the coil end:} Do not connect. Cut the shield braid and cover it with heat-shrink tubing.
+        \item \textit{At the amplifier end:} Connect the shield \textbf{only} to the Copper Busbar (Star Ground).
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{3. Reference and Output (Anchoring to Bit 0)}
+\begin{itemize}[noitemsep]
+    \item \textbf{Pin 5 (REF):} This is the voltage reference pin. It must run via an independent wire directly to the Copper Busbar. This defines the ``Zero'' of your measurement.
+    \item \textbf{Pin 6 (Vout):} The amplified signal exits here to your audio interface (Behringer UMC1820). Ensure the interface's ground also converges at the copper busbar.
+\end{itemize}
+
+\subsubsection{4. Power-Up and Verification Protocol}
+\begin{enumerate}[noitemsep]
+    \item \textbf{Voltage Check:} Before inserting the INA128, use a multimeter to verify that the batteries deliver a stable $\pm 12$ V (or $\pm 5$ V depending on your regulator).
+    \item \textbf{Silence Test:} Connect everything but keep the 36 peripheral coils \textbf{powered off}. The monitoring software should show a background noise level near zero.
+    \item \textbf{Phase Tuning:} Power on the 36 channels. If the star ground is perfect and the gain is set to 1.9694, the RMS will rise and stabilize in the vicinity of 0.7050.
+\end{enumerate}
+
+\section{Copper Busbar Wiring Summary}
+The following four conductors must arrive \textbf{separately} at your Star Ground busbar:
+\begin{enumerate}[noitemsep]
+    \item The return from the battery bank.
+    \item The shield of the central coil cable.
+    \item Pin 5 of the INA128.
+    \item The ground of the audio interfaces (UMC1820).
+\end{enumerate}
+
+\section*{Final Remarks}
+Precision in the Bit 1 hardware is what unleashes the potential of the Bit 0. If the 7\% asymmetry is executed on a noisy electrical plane, the RMS will fluctuate chaotically. If the star grounding is executed perfectly, the RMS will lock onto 0.7050, confirming that the 36+1 geometry is operating in harmony with the causal substrate.
+
+\end{document}

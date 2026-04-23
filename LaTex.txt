@@ -1,0 +1,405 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    language=Python,
+    showstringspaces=false
+}
+\usepackage{float}
+\usepackage{enumitem}
+
+\title{\textbf{Construction and Calibration Manual for the 36+1 Causal Detector \\ ``Puan Station''}}
+\author{Miguel Ángel Percudani\\
+\texttt{ORCID: 0009-0007-1748-3212}\\
+\small \textit{Independent Researcher, Buenos Aires, Argentina}}
+\date{Version 1.1 -- \today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+This manual describes the design, construction, and calibration of the 36+1 coil rotational detector based on the UAT/UPC frameworks. The system consists of 36 peripheral coils arranged in a ring with a nominal $10^\circ$ angular step, a $7\%$ table rotation asymmetry, and a central observer coil. Calibration is achieved via a fixed gain on the central coil, greatly simplifying the hardware compared to the original 8-coil design. By following this manual, the detector will achieve a saturation RMS of $0.7071$ ($1/\sqrt{2}$) at the central coil.
+
+\section{Coil Specifications}
+All 37 coils (36 peripheral + 1 central) must be as identical as possible to ensure precise destructive interference in the absence of signal. The following construction is recommended:
+
+\begin{table}[H]
+\centering
+\caption{Coil Specifications}
+\begin{tabular}{l c c}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Tolerance} \\
+\midrule
+Type & Air-core solenoid & --- \\
+Internal diameter & 10 cm & $\pm 1$ mm \\
+Number of turns ($N$) & 100 turns & $\pm 1$ turn \\
+Wire gauge & AWG 24 (0.51 mm diameter) & --- \\
+Approximate inductance & $\sim 2.5$ mH & $\pm 5\%$ \\
+DC resistance & $\sim 3.5\,\Omega$ & $\pm 10\%$ \\
+Maximum current & 100 mA RMS & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Fabrication:} Use plastic or pressboard bobbins. Wind neatly (layer by layer) to minimize parasitic capacitance. Label each coil with its index number ($0$ to $35$ for peripherals, $37$ for the central).
+
+\section{Mechanical and Angular Layout}
+The 36 peripheral coils are mounted on a support ring made of non-magnetic material (wood, PVC, aluminum). The ring radius (from center to the center of each coil) must be $R = 50$ cm.
+
+\subsection{Position Calculations}
+\begin{itemize}
+    \item Effective radius $R = 50$ cm.
+    \item Circumference $C = 2\pi R \approx 314.16$ cm.
+    \item Arc distance between adjacent coil centers $\approx 8.73$ cm.
+\end{itemize}
+
+\subsection{Mounting Angles (Base Step $10^\circ$)}
+\begin{table}[H]
+\centering
+\caption{Angular positions of peripheral coils}
+\begin{tabular}{c c|c c|c c}
+\toprule
+\textbf{Coil} & \textbf{Angle} & \textbf{Coil} & \textbf{Angle} & \textbf{Coil} & \textbf{Angle} \\
+\midrule
+00 & $0.0^\circ$ & 12 & $120.0^\circ$ & 24 & $240.0^\circ$ \\
+01 & $10.0^\circ$ & 13 & $130.0^\circ$ & 25 & $250.0^\circ$ \\
+02 & $20.0^\circ$ & 14 & $140.0^\circ$ & 26 & $260.0^\circ$ \\
+03 & $30.0^\circ$ & 15 & $150.0^\circ$ & 27 & $270.0^\circ$ \\
+04 & $40.0^\circ$ & 16 & $160.0^\circ$ & 28 & $280.0^\circ$ \\
+05 & $50.0^\circ$ & 17 & $170.0^\circ$ & 29 & $290.0^\circ$ \\
+06 & $60.0^\circ$ & 18 & $180.0^\circ$ & 30 & $300.0^\circ$ \\
+07 & $70.0^\circ$ & 19 & $190.0^\circ$ & 31 & $310.0^\circ$ \\
+08 & $80.0^\circ$ & 20 & $200.0^\circ$ & 32 & $320.0^\circ$ \\
+09 & $90.0^\circ$ & 21 & $210.0^\circ$ & 33 & $330.0^\circ$ \\
+10 & $100.0^\circ$ & 22 & $220.0^\circ$ & 34 & $340.0^\circ$ \\
+11 & $110.0^\circ$ & 23 & $230.0^\circ$ & 35 & $350.0^\circ$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Central Coil (37):} Located exactly at the center of the ring ($x=0, y=0$). It is recommended to mount it on a raised support (e.g., a 10 cm tall post) to minimize interference.
+
+\subsection{Layout Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.2, every node/.style={font=\small}]
+    % Support ring
+    \draw[gray, dashed, line width=1pt] (0,0) circle (5cm);
+    \draw[gray, thin] (0,0) circle (4.8cm);
+    \draw[gray, thin] (0,0) circle (5.2cm);
+    
+    % Peripheral coils (36)
+    \foreach \x in {0,1,...,35} {
+        \pgfmathsetmacro{\ang}{360/36*\x}
+        \coordinate (C\x) at (\ang:5cm);
+        \draw[thick, blue, fill=blue!10] (C\x) circle (0.3cm);
+        \node[blue] at (C\x) {\tiny \x};
+        % Radial line
+        \draw[gray, thin, ->] (C\x) -- (0,0);
+    }
+    
+    % Central coil
+    \draw[thick, red, fill=red!20] (0,0) circle (0.5cm);
+    \node[red] at (0,0) {\small 37};
+    
+    % Angle labels (selected for clarity)
+    \node[blue] at ({0}:5.8cm) {\small $0^\circ$};
+    \node[blue] at ({90}:5.8cm) {\small $90^\circ$};
+    \node[blue] at ({180}:5.8cm) {\small $180^\circ$};
+    \node[blue] at ({270}:5.8cm) {\small $270^\circ$};
+    
+    % Legend
+    \node[blue, right=6.5cm of {(0,0)}] {36 Peripheral Coils};
+    \node[red, below=0.4cm of {$(6.5,0)$}] {Central Coil (Observer)};
+\end{tikzpicture}
+\caption{Geometric layout of the 36+1 coils.}
+\end{figure}
+
+\section{Table Rotation Asymmetry (7\%)}
+The necessary asymmetry to break perfect cancellation is implemented electronically by adding an additional phase offset $\delta_i = i \times 0.07$ radians to the phase of each coil $i$. \textbf{No physical rotation of the table is required.}
+
+\section{Battery Power Supply and Grounding (Avoiding Mains Interference)}
+To eliminate 50/60 Hz mains hum and ground loops, the entire system must be powered by batteries and properly grounded at a single point.
+
+\subsection{Battery Specifications}
+\begin{table}[H]
+\centering
+\caption{Battery Power Supply Requirements}
+\begin{tabular}{l c c}
+\toprule
+\textbf{Subsystem} & \textbf{Voltage} & \textbf{Recommended Battery} \\
+\midrule
+Audio interfaces / DACs & $\pm 12$ V DC & Two 12 V 7 Ah sealed lead-acid batteries in series (center tap as ground) \\
+Preamplifier (INA128) & $\pm 5$ V DC & Two 6 V lantern batteries or regulated from $\pm 12$ V via low-noise LDOs \\
+Microcontroller/FPGA & $5$ V DC & USB power bank (isolated) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Grounding Scheme (Single-Point Star Ground)}
+\begin{itemize}[noitemsep]
+    \item \textbf{Main Ground Point:} A heavy copper busbar or a large metal plate located at the center of the coil array.
+    \item \textbf{Peripheral Coils:} One terminal of each peripheral coil must be connected to the main ground point. Use a separate wire for each coil (star configuration).
+    \item \textbf{Central Coil:} One terminal connected to the main ground point.
+    \item \textbf{Amplifier Ground:} The ground pin of the INA128 (or its power supply common) must be connected to the \textbf{same} main ground point.
+    \item \textbf{ADC / Computer Ground:} If a laptop is used, it should run on its internal battery and \textbf{not} be connected to mains earth. If a desktop is used, a USB isolator (e.g., ADuM3160) must be placed between the ADC and the PC.
+    \item \textbf{Shielding:} All signal cables must be shielded twisted pair. The shield must be connected to the main ground point \textbf{at one end only} (preferably the coil end) to avoid ground loops.
+\end{itemize}
+
+\subsection{Battery Wiring Diagram (Text Description)}
+\begin{verbatim}
+        +12V ------------[+] Battery 1 [-]----+---- GND (0V)
+                                              |
+        -12V ------------[-] Battery 2 [+]----+
+        
+        +5V  <-- Low-noise LDO (e.g., LT1963) from +12V
+        -5V  <-- Low-noise LDO (e.g., LT3015) from -12V
+\end{verbatim}
+
+\section{Central Coil Amplifier Schematic}
+The central coil must be amplified with a fixed gain of $G = 1.9694$ before digitization. A low-noise instrumentation amplifier is recommended.
+
+\subsection{Components}
+\begin{itemize}
+    \item Instrumentation Amplifier: \textbf{INA128} or \textbf{AD620}.
+    \item Gain resistor $R_G$: For INA128, $G = 1 + \frac{49.4\text{ k}\Omega}{R_G}$.
+    \item For $G = 1.9694$, $R_G = \frac{49.4\text{ k}\Omega}{0.9694} \approx 50.96\text{ k}\Omega$. Use a precision $51\text{ k}\Omega$ resistor (error $<0.1\%$).
+\end{itemize}
+
+\subsection{Block Diagram}
+\begin{verbatim}
+Central Coil (37) → [INA128 G=1.9694] → [Anti-aliasing Filter] → ADC → PC (isolated)
+\end{verbatim}
+The anti-aliasing filter should be a low-pass with cutoff frequency $\approx 500$ Hz (e.g., a second-order Sallen-Key filter).
+
+\section{Wiring and Connections}
+\begin{itemize}
+    \item Use shielded twisted-pair cable for each coil, routing signals to a central connection box.
+    \item Connect the 36 wire pairs to the output terminals of the multi-channel signal generator.
+    \item Ensure all coils have the same orientation (e.g., all start terminals facing upwards).
+\end{itemize}
+
+\section{Calculating the Exact Operating Frequency}
+\label{sec:frequency_calculation}
+
+The operating frequency $f_{\mathrm{target}}$ is not a static constant; it evolves daily according to the Inflationary Drift $\alpha = 0.046$ Hz/day, a fundamental prediction of the UAT/UPC frameworks. \textbf{Using an incorrect frequency for the experiment date will result in failed calibration and a null result.}
+
+\subsection{Reference Baseline}
+The frequency was measured as $f_0 = 84.4$ Hz on May 27, 2023. This date serves as the epoch for all calculations.
+
+\subsection{Dynamic Frequency Formula}
+For any experiment date $D$ (later than May 27, 2023), the correct operating frequency is:
+\begin{equation}
+f_{\mathrm{target}}(D) = 84.4 + 0.046 \times \Delta t
+\end{equation}
+where $\Delta t$ is the number of days elapsed between May 27, 2023, and the experiment date $D$. \textbf{Important:} The calculation must include the leap day February 29, 2024.
+
+\subsection{Automated Calculation in Python}
+To eliminate human error and ensure exact replication, the provided Python scripts do not use a hardcoded frequency. Instead, they compute $f_{\mathrm{target}}$ dynamically based on the current date or a user-specified date.
+
+The following function performs the correct calculation, accounting for all calendar peculiarities (including leap years) automatically via Python's \texttt{datetime} module:
+
+\begin{lstlisting}[language=Python, caption={Function to compute the exact target frequency for any given date}]
+from datetime import date
+
+def calculate_target_frequency(experiment_date: date) -> float:
+    """
+    Returns the UAT operating frequency (Hz) for a given experiment date.
+    """
+    reference_date = date(2023, 5, 27)
+    delta_days = (experiment_date - reference_date).days
+    return 84.4 + 0.046 * delta_days
+
+# Example usage for April 23, 2026:
+target_freq = calculate_target_frequency(date(2026, 4, 23))
+print(f"Target frequency for 2026-04-23: {target_freq:.6f} Hz")
+\end{lstlisting}
+
+\textbf{Integration into the main script:} Replace any hardcoded \texttt{F\_TARGET} with a call to this function, e.g., \texttt{F\_TARGET = calculate\_target\_frequency(date.today())} to always use the correct frequency for the day the script is executed.
+
+\section{36-Channel Signal Generator}
+A system capable of generating 36 synchronized sinusoids with exact phases and logarithmic modulation is required. Three options are described below.
+
+\subsection{Option 1: Multiple Synchronized Audio Interfaces (Recommended for Prototyping)}
+\textbf{Hardware:}
+\begin{itemize}
+    \item 5 $\times$ 8-channel audio interfaces with Word Clock (Behringer UMC1820, Focusrite Scarlett 18i20).
+    \item 1 $\times$ Word Clock master generator (or use the first interface as master).
+    \item ADAT optical or BNC cables for synchronization.
+\end{itemize}
+
+\textbf{Configuration:}
+\begin{enumerate}
+    \item Connect the Word Clock output of the master interface to the inputs of the slaves.
+    \item In software (Python with \texttt{sounddevice}), create 36 mono tracks.
+    \item Generate the signals using the phase formula (see code below).
+    \item Route each track to a different output channel.
+\end{enumerate}
+
+\subsection{Option 2: FPGA with Multi-Channel DACs (Dedicated System)}
+\textbf{Hardware:}
+\begin{itemize}
+    \item 1 $\times$ FPGA (Lattice iCE40, Xilinx Spartan-7).
+    \item 5 $\times$ DAC8568 (8 channels each, SPI interface).
+    \item 1 $\times$ STM32F4 microcontroller for supervision.
+\end{itemize}
+The FPGA implements 36 NCOs (Numerically Controlled Oscillators) based on DDS. Initial phases are loaded at startup and the logarithmic correction is updated periodically.
+
+\subsection{Option 3: USB Sound Card Aggregation with JACK (Linux)}
+Use several inexpensive USB sound cards and aggregate them with JACK Audio Connection Kit to create a virtual 40-channel device.
+
+\subsection{Python Code for Real-Time Generation (Option 1)}
+The following Python script generates the 36 channels with the required phases and logarithmic torsion.
+
+\begin{lstlisting}[language=Python, caption={Generation of 36 channels with logarithmic modulation}]
+import sounddevice as sd
+import numpy as np
+from datetime import date
+
+# --- Dynamic frequency calculation ---
+def calculate_target_frequency(experiment_date: date) -> float:
+    reference_date = date(2023, 5, 27)
+    delta_days = (experiment_date - reference_date).days
+    return 84.4 + 0.046 * delta_days
+
+FS = 192000
+F_TARGET = calculate_target_frequency(date.today())  # Auto-calibrated for today
+TAU = 0.3697
+DURATION = 10.0  # seconds
+
+t = np.arange(0, DURATION, 1/FS)
+base_phases = np.radians(np.arange(36) * 10.0)
+rotation = np.arange(36) * 0.07  # 7% asymmetry
+
+# Precompute signal for each channel
+signals = np.zeros((len(t), 36), dtype=np.float32)
+for i in range(36):
+    total_phase = 2*np.pi*F_TARGET*t + base_phases[i] - rotation[i] + TAU*np.log(t+1e-9)
+    signals[:, i] = np.sin(total_phase)
+
+print(f"Playing 36 channels at {F_TARGET:.6f} Hz")
+sd.play(signals, FS)
+sd.wait()
+\end{lstlisting}
+
+\subsection{Exact Phase Table for the 36 Channels}
+\begin{table}[H]
+\centering
+\caption{Initial phases (in radians) for each coil}
+\begin{tabular}{c c|c c}
+\toprule
+\textbf{Coil $i$} & \textbf{Total Phase (rad)} & \textbf{Coil $i$} & \textbf{Total Phase (rad)} \\
+\midrule
+0 & 0.0000 & 18 & 1.8816 \\
+1 & 0.1045 & 19 & 1.9861 \\
+2 & 0.2091 & 20 & 2.0907 \\
+3 & 0.3136 & 21 & 2.1952 \\
+4 & 0.4181 & 22 & 2.2997 \\
+5 & 0.5227 & 23 & 2.4043 \\
+6 & 0.6272 & 24 & 2.5088 \\
+7 & 0.7317 & 25 & 2.6133 \\
+8 & 0.8363 & 26 & 2.7179 \\
+9 & 0.9408 & 27 & 2.8224 \\
+10 & 1.0453 & 28 & 2.9269 \\
+11 & 1.1499 & 29 & 3.0315 \\
+12 & 1.2544 & 30 & 3.1360 \\
+13 & 1.3589 & 31 & 3.2405 \\
+14 & 1.4635 & 32 & 3.3451 \\
+15 & 1.5680 & 33 & 3.4496 \\
+16 & 1.6725 & 34 & 3.5541 \\
+17 & 1.7771 & 35 & 3.6587 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\textit{Note:} Rotation values ($-i \times 0.07$) have been subtracted from the nominal phase $i \times 10^\circ$ converted to radians.
+
+\section{Calibration and Initial Test Protocol}
+\subsection{Cancellation Check}
+With central gain set to 1.0 and \textbf{without} logarithmic modulation or table rotation (use exact nominal $10^\circ$ phases), the signal at the central coil should be nearly zero (RMS $< 0.01$ V). If not, check phases and connections.
+
+\subsection{Asymmetry Application}
+Enable table rotation ($i \times 0.07$ rad) and logarithmic torsion ($\tau \ln t$). The RMS should rise to approximately $0.36$ V (normalized).
+
+\subsection{Gain Adjustment}
+Set the central amplifier gain to $1.9694$. The RMS should stabilize at $\mathbf{0.705}$ V (or $0.7050$ normalized). Let the system run for at least 30 minutes to verify stability.
+
+\section{Interpreting Results}
+\begin{itemize}
+    \item \textbf{Stable RMS at 0.7050:} Successful calibration. The detector is operating at the causal saturation point.
+    \item \textbf{Slow fluctuations ($\pm 0.01$):} Possible biological coupling (Fourth Law). Do not adjust; the system will self-stabilize.
+    \item \textbf{Larger deviations:} Verify phase accuracy, amplifier gain, and connection integrity.
+\end{itemize}
+
+\section{Maintenance and Safety}
+\begin{itemize}
+    \item Keep the detector area free of large metallic objects.
+    \item Maximum current per coil is 100 mA RMS; do not exceed to avoid overheating.
+    \item Recalibrate the central amplifier gain periodically (every 3 months) to compensate for thermal drift.
+    \item Batteries should be recharged or replaced according to their specifications. Never operate the system while batteries are charging, as chargers introduce noise.
+\end{itemize}
+
+\appendix
+\section{Bill of Materials}
+\begin{table}[H]
+\centering
+\begin{tabular}{l c l}
+\toprule
+\textbf{Component} & \textbf{Quantity} & \textbf{Notes} \\
+\midrule
+Copper wire AWG 24 & $\sim 2$ kg & For 37 coils of 100 turns \\
+Plastic bobbins (10 cm diameter) & 37 & Or fabricate from PVC pipe \\
+Wooden ring (diameter 120 cm) & 1 & 18 mm plywood \\
+INA128 Instrumentation Amplifier & 1 & Or AD620 \\
+Resistor 51 k$\Omega$ (0.1\%) & 1 & For gain setting \\
+Multi-channel audio interface & 5 & Behringer UMC1820 or similar \\
+Shielded twisted-pair cable & 100 m & \\
+Computer with Python & 1 & \\
+12 V 7 Ah sealed lead-acid batteries & 2 & For $\pm 12$ V rails \\
+6 V lantern batteries & 2 & For $\pm 5$ V (or use LDO regulators) \\
+USB power bank & 1 & For microcontroller/FPGA \\
+Copper busbar (for star ground) & 1 & \\
+USB isolator (ADuM3160) & 1 & If using desktop PC \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Additional Source Code}
+A continuous RMS monitoring script is included to record time evolution.
+\begin{lstlisting}[language=Python, caption={Continuous RMS monitoring}]
+import numpy as np
+import sounddevice as sd
+import time
+
+FS = 192000
+CHUNK = 4096
+GAIN = 1.9694
+
+def rms_callback(indata, frames, time_info, status):
+    rms = np.sqrt(np.mean(indata**2))
+    print(f"RMS = {rms:.6f}")
+
+stream = sd.InputStream(channels=1, samplerate=FS, blocksize=CHUNK, callback=rms_callback)
+with stream:
+    print("Monitoring RMS. Press Ctrl+C to stop.")
+    while True:
+        time.sleep(0.1)
+\end{lstlisting}
+
+\end{document}

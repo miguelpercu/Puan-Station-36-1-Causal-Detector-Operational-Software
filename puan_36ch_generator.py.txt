@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Puan Station 36+1 Detector – 36-Channel Signal Generator
+================================================================
+Author: Miguel Ángel Percudani
+ORCID: 0009-0007-1748-3212
+Description:
+    Generates 36 synchronized sinusoidal signals for the peripheral
+    coils of the Puan Station detector. The operating frequency is
+    dynamically calculated using the UAT Inflationary Drift
+    (α = 0.046 Hz/day) from the reference epoch (2023-05-27).
+    Each channel includes the 7% table rotation asymmetry and the
+    logarithmic torsion τ = 0.3697.
+
+Requirements:
+    - Python 3.7+
+    - numpy
+    - sounddevice
+"""
+
+import numpy as np
+import sounddevice as sd
+from datetime import date
+
+# ---------------------------------------------------------------------
+# UAT/UPC FUNDAMENTAL CONSTANTS
+# ---------------------------------------------------------------------
+F_REF = 84.4               # Hz, measured on 2023-05-27
+ALPHA = 0.046              # Hz/day, Inflationary Drift
+TAU = 0.3697               # Logarithmic torsion parameter
+FS = 192000                # Sampling frequency (Hz)
+DURATION = 10.0            # Playback duration in seconds (adjust as needed)
+
+# ---------------------------------------------------------------------
+# DYNAMIC FREQUENCY CALCULATION
+# ---------------------------------------------------------------------
+def calculate_target_frequency(experiment_date: date) -> float:
+    """
+    Returns the UAT operating frequency (Hz) for a given experiment date.
+    The calculation includes the leap day 2024-02-29 automatically via
+    Python's datetime module.
+    """
+    reference_date = date(2023, 5, 27)
+    delta_days = (experiment_date - reference_date).days
+    return F_REF + ALPHA * delta_days
+
+# Use today's date to auto-calibrate
+F_TARGET = calculate_target_frequency(date.today())
+
+print(f"Puan Station 36-Channel Generator")
+print(f"Target frequency for {date.today().isoformat()}: {F_TARGET:.6f} Hz")
+print(f"Sampling rate: {FS} Hz | Duration: {DURATION} s")
+print(f"Torsion τ: {TAU} | Table rotation asymmetry: 7%")
+
+# ---------------------------------------------------------------------
+# SIGNAL GENERATION
+# ---------------------------------------------------------------------
+t = np.arange(0, DURATION, 1/FS)
+
+# Base phases: 0°, 10°, 20°, ..., 350°
+base_phases = np.radians(np.arange(36) * 10.0)
+
+# 7% table rotation asymmetry (additional phase offset proportional to index)
+rotation = np.arange(36) * 0.07   # radians
+
+# Pre-allocate output array (36 columns, one per channel)
+signals = np.zeros((len(t), 36), dtype=np.float32)
+
+for i in range(36):
+    # Total instantaneous phase
+    total_phase = (2.0 * np.pi * F_TARGET * t
+                   + base_phases[i]
+                   - rotation[i]
+                   + TAU * np.log(t + 1e-9))
+    signals[:, i] = np.sin(total_phase)
+
+print("Starting playback. Press Ctrl+C to stop early.")
+try:
+    sd.play(signals, FS)
+    sd.wait()
+except KeyboardInterrupt:
+    sd.stop()
+    print("\nPlayback interrupted by user.")
+
+print("Generator finished.")
